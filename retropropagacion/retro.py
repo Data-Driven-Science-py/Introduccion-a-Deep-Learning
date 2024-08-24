@@ -1,65 +1,75 @@
 import numpy as np
+from numpy.typing import NDArray
 
 def sigmoid(x):
-    return 1 / (1 + np.exp(-x)) ## Otra funcion no linear de activacion
+    return 1 / (1 + np.exp(-x))
 
 def d_sigmoid(x):
-    return x * (1 - x) ## Derivada de la funcion de activacion
+    return x * (1 - x)
+
+def loss(input, target) -> NDArray:
+    return np.mean((input - target)**2)
 
 class RedNeuronal:
-    # Constructor de la red neuronal
     def __init__(self, input_size: int):
-        self.w_1 = np.random.randint(input_size, 3)
-        self.w_2 = np.random.randint(3, 4)
-        self.w_3 = np.random.randint(4, 2)
+        self.w_1 = np.random.randn(input_size, 3) # Pesos de la primera capa
+        self.w_2 = np.random.randn(3, 4) # Pesos de la segunda capa
+        self.w_3 = np.random.randn(4, 2) # Pesos de la tercera capa
 
-        self.weights_input_hidden = np.random.randn(input_size, hidden_size) #Inicia los parameteros de la primera capa
-        self.weights_hidden_output = np.random.randn(hidden_size, output_size) # Inicia los parametros de la ultima capa
-        self.bias_hidden = np.zeros((1, hidden_size)) #Inicia la constante de la primera capa
-        self.bias_output = np.zeros((1, output_size)) #Incia la constante de la ultima capa
+        self.b_1 = np.random.randn(1, 3) # Bias de la primera capa
+        self.b_2 = np.random.randn(1, 4) # Bias de la segunda capa
+        self.b_3 = np.random.randn(1, 2) # Bias de la tercera capa
 
-    def feedforward(self, x):
-        self.hidden = sigmoid(np.dot(x, self.weights_input_hidden) + self.bias_hidden)
-        output = sigmoid(np.dot(self.hidden, self.weights_hidden_output) + self.bias_output)
-        return output
+    def propagacion_hacia_delante(self, x: NDArray) -> NDArray:
+        self.z_1 = np.dot(x, self.w_1) + self.b_1
+        self.a_1 = sigmoid(self.z_1)
+        self.z_2 = np.dot(self.a_1, self.w_2) + self.b_2
+        self.a_2 = sigmoid(self.z_2)
+        self.z_3 = np.dot(self.a_2, self.w_3) + self.b_3
+        self.a_3 = sigmoid(self.z_3)
+        return self.a_3
 
-    def backpropagation(self, x, y, output, learning_rate):
-        output_error = y - output
-        output_delta = output_error * sigmoid_derivative(output)
+    def retropropagacion(self, x: NDArray, y: NDArray, learning_rate: float):
+        # Calcular el error general y la gradiente con respecto al output
+        error_salida = y - self.a_3
+        d_salida = error_salida * d_sigmoid(self.z_3)
 
-        # Calculate hidden layer error and gradients
-        hidden_error = output_delta.dot(self.weights_hidden_output.T)
-        hidden_delta = hidden_error * sigmoid_derivative(self.hidden)
+        # Calcular el error de la
+        error_escondida_2 = d_salida.dot(self.w_3.T)
+        d_escondido_2 = error_escondida_2 * d_sigmoid(self.z_2)
 
-        # Update weights and biases
-        self.weights_hidden_output += self.hidden.T.dot(output_delta) * learning_rate
-        self.weights_input_hidden += x.T.dot(hidden_delta) * learning_rate
-        self.bias_output += np.sum(output_delta, axis=0, keepdims=True) * learning_rate
-        self.bias_hidden += np.sum(hidden_delta, axis=0, keepdims=True) * learning_rate
+        error_escondida_1 = d_escondido_2.dot(self.w_2.T)
+        d_escondido_1 = error_escondida_1 * d_sigmoid(self.z_1)
 
-    def train(self, x, y, epochs, learning_rate):
-        for epoch in range(epochs):
-            output = self.feedforward(x)
-            self.backpropagation(x, y, output, learning_rate)
-            if epoch % 100 == 0:
-                loss = np.mean(np.square(y - output))
-                print(f'Epoch {epoch}, Loss: {loss:.4f}')
+        # Hacer el paso del gradiente dado el calculo mediate retropropagacion
+        self.w_3 += self.a_2.T.dot(d_salida) * learning_rate
+        self.w_2 += self.a_1.T.dot(d_escondido_2) * learning_rate
+        self.w_1 += x.T.dot(d_escondido_1) * learning_rate
 
-    def predict(self, x):
-        return self.feedforward(x)
+        self.b_3 += np.sum(d_salida, axis=0, keepdims=True) * learning_rate
+        self.b_2 += np.sum(d_escondido_2, axis=0, keepdims=True) * learning_rate
+        self.b_1 += np.sum(d_escondido_1, axis=0, keepdims=True) * learning_rate
 
-# Example usage
+    def entrenar(self, x: NDArray, y: NDArray, epocas: int, learning_rate: float):
+        for epoca in range(epocas):
+            output = self.propagacion_hacia_delante(x)
+            self.retropropagacion(x, y, learning_rate)
+            if epoca % 100 == 0:
+                print(f'Epoch {epoca}, Loss: {loss(output, y):.4f}')
+
+    def predecir(self, x: NDArray) -> NDArray:
+        return self.propagacion_hacia_delante(x)
+
 if __name__ == '__main__':
-    # XOR dataset
     x = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
     y = np.array([[0], [1], [1], [0]])
 
-    # Initialize and train the network
-    nn = NeuralNetwork(input_size=2, hidden_size=4, output_size=1)
-    nn.train(x, y, epochs=10000, learning_rate=0.1)
+    # Iniciar el model y entrenar en el dataset
+    red = RedNeuronal(input_size=2)
+    red.entrenar(x, y, epocas=10000, learning_rate=0.1)
 
-    # Make predictions
-    print("Predictions:")
+    # Hacer predicciones
+    print("Predicciones:")
     for i in x:
-        print(f'{i} -> {nn.predict(i)}')
+        print(f'{i} -> {red.predecir(i)}')
 
