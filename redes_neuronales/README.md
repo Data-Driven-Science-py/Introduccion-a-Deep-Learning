@@ -18,8 +18,10 @@ La red neuronal es un algoritmo compuesto por la iteracion secuencial de evaluac
 Dado un vector de entrada $x$, digamos que este vector es de tres dimensiones: $x = (x_1, x_2, x_3)$, este vector es pasado como entrada a cada uno de los perceptrones de la capa de entrada, los resultados de cada uno de los perceptrones se concatenan en un vector escondido que va a ser la entrada de la siguiente capa de perceptrones.
 Una red neuronal tiene capas que dada la evaluacion secuencial, su computacion depende de que capas anteriores terminen su trabajo. Por el otro lado, perceptrones de la misma capa pueden ser evaluados de manera independiente con respecto a los demas.
 Para poder interpretar, dese el caso de la figura 1, primero tenemos dos perceptrones, ya sabemos como funcionan, dado el vector de entrada $x$ que tenemos, terminara evaluando esta entrada de la siguiente manera:
-$f_1(x) = w_{11} x_1 + w_{12} x_2 + w_{13} x_3 + b = a_{11}
-$f_2(x) = w_{21} x_1 + w_{22} x_2 + w_{23} x_3 + b = a_{12}
+$f_1(x) = w_{11} x_1 + w_{12} x_2 + w_{13} x_3 + b = a_{11}$
+$f_2(x) = w_{21} x_1 + w_{22} x_2 + w_{23} x_3 + b = a_{12}$
+$f_3(x) = w_{31} x_1 + w_{32} x_2 + w_{33} x_3 + b = a_{13}$
+
 El primer valor del indice representa el numero del perceptron dentro de la capa, y el segundo es el indicador del peso dentro del perceptron (En el caso de $w$). El indice de $a$ representa que es la salida de la primera capa (1) y luego el indicativo de su proveniencia con respecto a los perceptrones.
 
 Los resultados de los dos perceptrones se juntan en un nuevo vector de entrada para la siguiente capa:
